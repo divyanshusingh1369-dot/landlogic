@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 from matplotlib.colors import BoundaryNorm, ListedColormap
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+
 
 
 def parse_args() -> argparse.Namespace:
