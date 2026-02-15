@@ -98,13 +98,46 @@ def save_risk_png(path, risk_array):
     cmap = ListedColormap(["#00000000", "#2ECC71", "#F1C40F", "#E74C3C"])
     norm = BoundaryNorm([-0.5, 0.5, 1.5, 2.5, 3.5], cmap.N)
 
-    plt.figure(figsize=(10, 8))
-    plt.imshow(risk_array, cmap=cmap, norm=norm)
-    plt.title("Land Risk Zones")
-    plt.axis("off")
+    # Build a figure with map on top and a small data panel below.
+    fig = plt.figure(figsize=(11, 10))
+    gs = fig.add_gridspec(2, 1, height_ratios=[5, 1.2])
+
+    ax_map = fig.add_subplot(gs[0])
+    ax_map.imshow(risk_array, cmap=cmap, norm=norm)
+    ax_map.set_title("Land Risk Zones")
+
+    # Add grid lines to the PNG visualization.
+    rows, cols = risk_array.shape
+    step = max(1, min(rows, cols) // 20)
+    ax_map.set_xticks(np.arange(0, cols, step))
+    ax_map.set_yticks(np.arange(0, rows, step))
+    ax_map.grid(color="white", linestyle="--", linewidth=0.4, alpha=0.6)
+    ax_map.tick_params(labelbottom=False, labelleft=False, length=0)
+
+    # Compute summary data to display below the map.
+    valid = risk_array > 0
+    total = int(np.count_nonzero(valid))
+    green = int(np.count_nonzero(risk_array == 1))
+    yellow = int(np.count_nonzero(risk_array == 2))
+    red = int(np.count_nonzero(risk_array == 3))
+
+    def pct(v):
+        return (100.0 * v / total) if total else 0.0
+
+    ax_data = fig.add_subplot(gs[1])
+    ax_data.axis("off")
+    summary_text = (
+        f"Cells analyzed: {total:,}    "
+        f"Green: {green:,} ({pct(green):.1f}%)    "
+        f"Yellow: {yellow:,} ({pct(yellow):.1f}%)    "
+        f"Red: {red:,} ({pct(red):.1f}%)"
+    )
+    ax_data.text(0.01, 0.55, summary_text, fontsize=11, family="monospace")
+
     plt.tight_layout()
     plt.savefig(path, dpi=200)
     plt.close()
+
 
 
 # ---------------------------
